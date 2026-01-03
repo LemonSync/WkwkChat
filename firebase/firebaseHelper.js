@@ -5,6 +5,11 @@ const { HttpError } = require("../utils/allFunction");
 
 const OTP_COOLDOWN = 60 * 1000;
 
+/** Create OTP
+ * @param {string} phone
+ * @param {string} metodeMasuk - "register" | "reset"
+ * @param {number} ttlMinutes
+ */
 async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
   const now = Date.now();
 
@@ -22,7 +27,6 @@ async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
     }
   }
 
-  // ⏳ 3. COOLDOWN OTP
   const snap = await db
     .collection("otps")
     .where("phone", "==", phone)
@@ -37,11 +41,12 @@ async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
       const waktuTunggu = Math.ceil(
         (OTP_COOLDOWN - (now - lastOtp.lastSentAt)) / 1000
       );
-      throw new Error(`Mohon tunggu ${waktuTunggu} detik sebelum mengirim OTP lagi`);
+      throw new Error(
+        `Mohon tunggu ${waktuTunggu} detik sebelum mengirim OTP lagi`
+      );
     }
   }
 
-  // 🔐 4. BUAT OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   await db.collection("otps").add({
@@ -50,12 +55,11 @@ async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
     metodeMasuk,
     waktuHabis: now + ttlMinutes * 60 * 1000,
     waktuDibuat: admin.firestore.FieldValue.serverTimestamp(),
-    lastSentAt: now
+    lastSentAt: now,
   });
 
   return otp;
 }
-
 
 /**
  * Verify OTP
@@ -89,10 +93,11 @@ async function verifyOtp(phone, otp, metodeMasuk, deleteAfterUse = true) {
   return { valid: true };
 }
 
-/* ==============================
-   USER SECTION
-================================ */
-
+/** Register User
+ * @param {string} phone
+ * @param {string} username
+ * @param {string} password
+ */
 async function registerUser({ phone, username, password }) {
   const ref = db.collection("users").doc(phone);
   const snap = await ref.get();
@@ -102,17 +107,20 @@ async function registerUser({ phone, username, password }) {
   const passwordAcak = await acak.hash(password, 10);
 
   await ref.set({
-  phone,
-  username,
-  role: "user",
-  passwordAcak,
-  waktuDibuat: admin.firestore.FieldValue.serverTimestamp()
-});
-
+    phone,
+    username,
+    role: "user",
+    passwordAcak,
+    waktuDibuat: admin.firestore.FieldValue.serverTimestamp(),
+  });
 
   return { ok: true };
 }
 
+/** Login User
+ * @param {string} phone
+ * @param {string} password
+ */
 async function loginUser({ phone, password }) {
   const ref = db.collection("users").doc(phone);
   const snap = await ref.get();
@@ -125,13 +133,16 @@ async function loginUser({ phone, password }) {
   if (!valid) throw new Error("Password salah");
 
   return {
-  phone: user.phone,
-  username: user.username,
-  role: user.role
-};
-
+    phone: user.phone,
+    username: user.username,
+    role: user.role,
+  };
 }
 
+/** Reset Password
+ * @param {string} phone
+ * @param {string} newPassword
+ */
 async function resetPassword({ phone, newPassword }) {
   const ref = db.collection("users").doc(phone);
   const snap = await ref.get();
@@ -144,18 +155,18 @@ async function resetPassword({ phone, newPassword }) {
   return { ok: true };
 }
 
+/** Save Message
+ * @param {string} roomId
+ * @param {string} user
+ * @param {string} text
+ */
 async function saveMessage({ roomId, user, text }) {
-  await db
-    .collection("rooms")
-    .doc(roomId)
-    .collection("messages")
-    .add({
-      user,
-      text,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    })
+  await db.collection("rooms").doc(roomId).collection("messages").add({
+    user,
+    text,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 }
-
 
 module.exports = {
   createOtp,
@@ -163,5 +174,5 @@ module.exports = {
   registerUser,
   loginUser,
   resetPassword,
-  saveMessage
+  saveMessage,
 };
