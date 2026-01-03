@@ -1,58 +1,10 @@
-name: Laporan BUG
-title: "[BUG] "
-description: Gunakan template ini untuk melaporkan masalah
-labels: [bug]
-body:
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
 
-  - type: input
-    id: baileys-version
-    attributes:
-      label: Versi Baileys
-      description: Masukkan versi dari paket Baileys yang kamu gunakan.
-      placeholder: 1.2.3
-    validations:
-      required: true
+---
 
-  - type: input
-    id: nodejs-version
-    attributes:
-      label: Versi NodeJS
-      description: Masukkan versi NodeJS yang kamu gunakan.
-      placeholder: 1.2.3
-    validations:
-      required: true
 
-  - type: input
-    id: operating-system
-    attributes:
-      label: Sistem Operasi
-      description: Masukkan sistem operasi server yang kamu gunakan.
-      placeholder: Linux Ubuntu 22
-    validations:
-      required: true
-
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: Informasi Tambahan
-      description: |
-        Jelaskan permasalahan yang kamu alami. Kamu bisa melampirkan file log atau screenshot jika perlu.
-      placeholder: Tulis detail permasalahan di sini...
-    validations:
-      required: true
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Daftar Periksa
-      options:
-        - label: Saya menggunakan versi terbaru.
-        - label: Saya sudah memeriksa dokumentasi dan tidak menemukan jawabannya.
-          required: true
-        - label: Saya telah mencari issue yang sudah ada dan memastikan ini bukan duplikat.
-          required: true
-        - label: Saya menggunakan aplikasi whastapp versi terbaru.
-        - label: Saya telah memberikan informasi yang cukup.
-          required: true
-        - label: Jika informasi saya tidak jelas (asal isi), tidak masalah apabila laporan saya tidak direspons.
-          required: true
