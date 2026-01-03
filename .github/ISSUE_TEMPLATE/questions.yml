@@ -2,6 +2,9 @@ name: Question
 title: "[QUESTION] "
 description: Gunakan template ini untuk bertanya seputar penggunaan, konfigurasi, atau logika WkwkChat
 labels: [question]
+assignees:
+  - LemonSync
+  - UcokBaba-byte
 
 body:
   - type: dropdown
