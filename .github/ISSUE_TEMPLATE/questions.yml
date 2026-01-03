@@ -1,0 +1,83 @@
+name: Pertanyaan - Indonesia
+title: "[QUESTION] "
+description: Gunakan template ini untuk bertanya seputar penggunaan, konfigurasi, atau logika WkwkChat
+labels: [question]
+
+body:
+  - type: dropdown
+    id: question-category
+    attributes:
+      label: Kategori Pertanyaan
+      description: Pilih kategori yang paling sesuai dengan pertanyaanmu.
+      options:
+        - Instalasi & Setup
+        - Login / Register / OTP
+        - WhatsApp (Baileys)
+        - Socket.IO & Real-time Chat
+        - Firebase / Database
+        - Keamanan & JWT
+        - Deployment / VPS
+        - Lainnya
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Lingkungan (Opsional)
+      description: |
+        Informasi singkat lingkungan yang kamu gunakan.
+        Contoh: NodeJS, OS, Hosting, dll.
+      placeholder: NodeJS 20, Ubuntu 22.04, VPS NAT
+    validations:
+      required: false
+
+  - type: textarea
+    id: question-detail
+    attributes:
+      label: Pertanyaan
+      description: |
+        Jelaskan pertanyaanmu dengan jelas dan rinci.
+        Sertakan error log atau potongan kode jika perlu.
+      placeholder: |
+        Saya mengalami error saat OTP dikirim lewat WhatsApp,
+        tetapi tidak tersimpan di Firestore.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-tried
+    attributes:
+      label: Apa yang Sudah Dicoba?
+      description: |
+        Jelaskan apa saja yang sudah kamu lakukan sebelum bertanya.
+      placeholder: |
+        - Sudah cek koleksi `otps`
+        - Sudah restart server
+        - Sudah update Baileys
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected-answer
+    attributes:
+      label: Harapan Jawaban
+      description: |
+        Jawaban seperti apa yang kamu harapkan?
+        (Contoh: solusi langsung, penjelasan konsep, atau contoh kode)
+      placeholder: Penjelasan konsep + contoh kode
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Daftar Periksa
+      options:
+        - label: Saya sudah membaca README dan dokumentasi.
+          required: true
+        - label: Saya sudah mencari issue yang ada dan tidak menemukan jawaban.
+          required: true
+        - label: Saya sudah menyertakan informasi yang cukup.
+          required: true
+        - label: Saya siap memberikan klarifikasi tambahan jika diperlukan.
