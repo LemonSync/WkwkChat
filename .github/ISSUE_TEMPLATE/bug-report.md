@@ -1,38 +1,42 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: 🐛 Bug Report
+description: Laporkan bug atau error
+title: "[BUG] "
+labels: ["bug"]
+assignees:
+  - LemonSync
 
----
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih sudah melaporkan bug 🙏  
+        Mohon isi dengan jelas agar cepat diperbaiki.
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS / Browser / Node version
+      placeholder: "Windows 10, Chrome 120, Node 18"
+    validations:
+      required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Deskripsi Bug
+      description: Jelaskan bug yang terjadi
+      placeholder: "Saat klik tombol submit, aplikasi crash..."
+    validations:
+      required: true
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Langkah Reproduksi
+      placeholder: |
+        1. Buka halaman ...
+        2. Klik ...
+        3. Terjadi error
+    validations:
+      required: true
