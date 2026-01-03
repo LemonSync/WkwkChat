@@ -1,20 +1,93 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+name: Permintaan Fitur - Indonesia
+title: "[FEATURE] "
+description: Gunakan template ini untuk mengusulkan fitur baru atau peningkatan pada WkwkChat
+labels: [enhancement]
 
----
+body:
+  - type: input
+    id: feature-title
+    attributes:
+      label: Judul Fitur
+      description: Ringkasan singkat tentang fitur yang diusulkan.
+      placeholder: Sistem role moderator di chat room
+    validations:
+      required: true
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  - type: textarea
+    id: problem
+    attributes:
+      label: Masalah yang Ingin Diselesaikan
+      description: |
+        Jelaskan masalah atau keterbatasan yang kamu alami saat ini.
+        Mengapa fitur ini dibutuhkan?
+      placeholder: Saat ini hanya ada creator dan user, sehingga sulit mengatur room besar.
+    validations:
+      required: true
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solusi yang Diusulkan
+      description: |
+        Jelaskan bagaimana fitur ini seharusnya bekerja.
+        Sertakan contoh alur atau logika jika perlu.
+      placeholder: |
+        Tambahkan role "moderator" yang bisa kick user dan menghapus pesan.
+    validations:
+      required: true
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatif yang Pernah Dipertimbangkan
+      description: |
+        Apakah ada solusi lain yang sudah kamu coba?
+        Jika tidak ada, tulis "Tidak ada".
+      placeholder: Menggunakan banyak creator, tapi kurang efektif.
+    validations:
+      required: false
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Dampak & Manfaat
+      description: |
+        Jelaskan manfaat fitur ini bagi pengguna dan project.
+      placeholder: Membuat chat room lebih teratur dan aman.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioritas Fitur
+      description: Seberapa penting fitur ini menurutmu?
+      options:
+        - Rendah
+        - Sedang
+        - Tinggi
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Informasi Tambahan
+      description: |
+        Sertakan mockup, diagram, atau referensi lain jika ada.
+      placeholder: Bisa pakai flowchart atau screenshot.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Daftar Periksa
+      options:
+        - label: Saya sudah memastikan fitur ini belum pernah diusulkan sebelumnya.
+          required: true
+        - label: Fitur ini relevan dengan tujuan WkwkChat.
+          required: true
+        - label: Saya bersedia membantu diskusi atau pengembangan fitur ini.
+        - label: Saya memahami bahwa tidak semua fitur dapat langsung diimplementasikan.
+          required: true
