@@ -2,6 +2,8 @@ name: Feature Request
 title: "[FEATURE] "
 description: Gunakan template ini untuk mengusulkan fitur baru atau peningkatan pada WkwkChat
 labels: [request]
+assignees:
+  - LemonSync
 
 body:
   - type: input
