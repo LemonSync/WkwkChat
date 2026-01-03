@@ -8,11 +8,12 @@ class HttpError extends Error {
   }
 }
 
+/** Cek nomor di bannedNumbers */
 function checkNumber(phone, bannedNumbers) {
-    const data = require(path.join(__dirname, "../json/bannedNumber.json"));
-    if (data.nomor.includes(phone)) {
-      throw new HttpError("Nomor ini diblokir dari penggunaan layanan.", 403);
-    }
+  const data = require(path.join(__dirname, "../json/bannedNumber.json"));
+  if (data.nomor.includes(phone)) {
+    throw new HttpError("Nomor ini diblokir dari penggunaan layanan.", 403);
+  }
 }
 
 module.exports = { HttpError, checkNumber };

@@ -17,48 +17,43 @@ const {
   registerUser,
   loginUser,
   resetPassword,
-  saveMessage
+  saveMessage,
 } = require("./firebase/firebaseHelper");
 
 const {
   initWhatsApp,
   isWhatsappReady,
   getQR,
-  sendOtp
+  sendOtp,
 } = require("./whatsapp/baileys");
 
 const app = express();
 
-/* ===============================
-   BASIC SERVER SETUP
-================================ */
+// ===============================
+
 app.set("trust proxy", 1);
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"]
-}));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ===============================
-   FRONTEND
-================================ */
-app.use(express.static(path.join(__dirname, "public")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+// ===============================
 
-/* ===============================
-   HTTP + SOCKET
-================================ */
+app.use(express.static(path.join(__dirname, "public")));
+
+// ===============================
+
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-/* ===============================
-   SOCKET AUTH (JWT)
-================================ */
+// ===============================
+
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("Unauthorized"));
@@ -71,14 +66,13 @@ io.use((socket, next) => {
   }
 });
 
-/* ===============================
-   SOCKET EVENTS
-================================ */
-io.on("connection", socket => {
+// ===============================
+
+io.on("connection", (socket) => {
   console.log("🔌 Connected:", socket.user.username);
 
-  /* ===== CREATE ROOM (CREATOR ONLY) ===== */
-  socket.on("create-room", async roomId => {
+  // Buat Room
+  socket.on("create-room", async (roomId) => {
     try {
       if (socket.user.role !== "creator")
         return socket.emit("error", "Tidak punya izin membuat room");
@@ -88,13 +82,12 @@ io.on("connection", socket => {
       const ref = db.collection("rooms").doc(roomId);
       const snap = await ref.get();
 
-      if (snap.exists)
-        return socket.emit("error", "Room sudah ada");
+      if (snap.exists) return socket.emit("error", "Room sudah ada");
 
       await ref.set({
         roomId,
         createdBy: socket.user.phone,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       socket.emit("room-created", roomId);
@@ -103,65 +96,63 @@ io.on("connection", socket => {
     }
   });
 
-  /* ===== JOIN ROOM (SEMUA USER) ===== */
-  socket.on("join-room", async roomId => {
+  // Join Room
+  socket.on("join-room", async (roomId) => {
     if (!roomId) return;
 
     const ref = db.collection("rooms").doc(roomId);
     const snap = await ref.get();
 
-    if (!snap.exists)
-      return socket.emit("error", "Room tidak ditemukan");
+    if (!snap.exists) return socket.emit("error", "Room tidak ditemukan");
 
     socket.join(roomId);
 
     socket.emit("joined", roomId);
     socket.to(roomId).emit("system", {
       text: `${socket.user.username} bergabung`,
-      time: Date.now()
+      time: Date.now(),
     });
   });
 
-  /* ===== SEND MESSAGE (SEMUA ROLE) ===== */
+  // Kirim Pesan
   socket.on("send-message", async ({ roomId, message }) => {
-  if (!roomId || !message) return
+    if (!roomId || !message) return;
 
-  const roomSnap = await db.collection("rooms").doc(roomId).get()
-  if (!roomSnap.exists)
-    return socket.emit("error", "Room tidak ditemukan")
+    const roomSnap = await db.collection("rooms").doc(roomId).get();
+    if (!roomSnap.exists) return socket.emit("error", "Room tidak ditemukan");
 
-  await saveMessage({
-    roomId,
-    user: socket.user.username,
-    text: message
-  })
+    await saveMessage({
+      roomId,
+      user: socket.user.username,
+      text: message,
+    });
 
-  io.to(roomId).emit("message", {
-    user: socket.user.username,
-    text: message,
-    time: Date.now()
-  })
-})
-
+    io.to(roomId).emit("message", {
+      user: socket.user.username,
+      text: message,
+      time: Date.now(),
+    });
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ Disconnected:", socket.user.username);
   });
 });
 
-/* ===============================
-   INIT WHATSAPP
-================================ */
 initWhatsApp();
 
-/* ===============================
-   ROUTES
-================================ */
+// ===============================
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* ===== WHATSAPP LOGIN ===== */
+// Whatsapp QR Login ================
+
 app.get("/whatsapp/login", async (_, res) => {
   const qr = getQR();
 
@@ -174,45 +165,11 @@ app.get("/whatsapp/login", async (_, res) => {
     `);
   }
 
-  res.send(isWhatsappReady()
-    ? "✅ WhatsApp siap"
-    : "⏳ Menunggu QR..."
-  );
+  res.send(isWhatsappReady() ? "✅ WhatsApp siap" : "⏳ Menunggu QR...");
 });
 
-/* ===============================
-   OTP REGISTER
-================================ */
-app.post("/api/register/otp/send", async (req, res) => {
-  try {
-    const { phone } = req.body;
-    if (!phone) throw new Error("Phone required");
-    if (!isWhatsappReady()) throw new Error("WhatsApp not ready");
+// Reguster ================================
 
-    checkNumber(phone);
-
-    const otp = await createOtp(phone, "register");
-    await sendOtp(phone, otp, "register")
-
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(400).json({ ok: false, message: err.message });
-  }
-});
-
-app.post("/api/register/otp/verify", async (req, res) => {
-  try {
-    const { phone, code } = req.body;
-    const result = await verifyOtp(phone, code, "register", false);
-    res.json({ valid: result.valid });
-  } catch (err) {
-    res.status(400).json({ valid: false });
-  }
-});
-
-/* ===============================
-   REGISTER
-================================ */
 app.post("/api/register", async (req, res) => {
   try {
     const { phone, username, password, code } = req.body;
@@ -231,9 +188,52 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-/* ===============================
-   OTP RESET
-================================ */
+app.post("/api/register/otp/send", async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) throw new Error("Phone required");
+    if (!isWhatsappReady()) throw new Error("WhatsApp not ready");
+
+    checkNumber(phone);
+
+    const otp = await createOtp(phone, "register");
+    await sendOtp(phone, otp, "register");
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: err.message });
+  }
+});
+
+app.post("/api/register/otp/verify", async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    const result = await verifyOtp(phone, code, "register", false);
+    res.json({ valid: result.valid });
+  } catch (err) {
+    res.status(400).json({ valid: false });
+  }
+});
+
+// Reset Password ================================
+
+app.post("/api/reset", async (req, res) => {
+  try {
+    const { phone, code, newPassword } = req.body;
+    if (!phone || !code || !newPassword) throw new Error("Data tidak lengkap");
+
+    checkNumber(phone);
+
+    const otpCheck = await verifyOtp(phone, code, "reset");
+    if (!otpCheck.valid) throw new Error("OTP tidak valid");
+
+    await resetPassword({ phone, newPassword });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: err.message });
+  }
+});
+
 app.post("/api/reset/otp/send", async (req, res) => {
   try {
     const { phone } = req.body;
@@ -243,7 +243,7 @@ app.post("/api/reset/otp/send", async (req, res) => {
     checkNumber(phone);
 
     const otp = await createOtp(phone, "reset");
-    await sendOtp(phone, otp, "reset")
+    await sendOtp(phone, otp, "reset");
 
     res.json({ ok: true });
   } catch (err) {
@@ -261,30 +261,8 @@ app.post("/api/reset/otp/verify", async (req, res) => {
   }
 });
 
-/* ===============================
-   RESET PASSWORD
-================================ */
-app.post("/api/reset", async (req, res) => {
-  try {
-    const { phone, code, newPassword } = req.body;
-    if (!phone || !code || !newPassword)
-      throw new Error("Data tidak lengkap");
+// Login ================================
 
-    checkNumber(phone);
-
-    const otpCheck = await verifyOtp(phone, code, "reset");
-    if (!otpCheck.valid) throw new Error("OTP tidak valid");
-
-    await resetPassword({ phone, newPassword });
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(400).json({ ok: false, message: err.message });
-  }
-});
-
-/* ===============================
-   LOGIN
-================================ */
 app.post("/api/login", async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -298,7 +276,7 @@ app.post("/api/login", async (req, res) => {
       {
         phone: user.phone,
         username: user.username,
-        role: user.role || "user"
+        role: user.role || "user",
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
@@ -310,20 +288,16 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-/* ===============================
-   ERROR HANDLER
-================================ */
+// ===============================
+
 app.use((err, req, res, next) => {
   console.error("🔥 ERROR:", err.message);
   res.status(err.statusCode || 500).json({
     ok: false,
-    message: err.message
+    message: err.message,
   });
 });
 
-/* ===============================
-   START SERVER
-================================ */
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
