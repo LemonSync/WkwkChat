@@ -1,33 +1,35 @@
 name: Laporan BUG - Indonesia
 title: "[BUG] "
-description: Gunakan template ini untuk melaporkan masalah
+description: Gunakan template ini untuk melaporkan bug atau error pada WkwkChat
 labels: [bug]
+
 body:
-
   - type: input
-    id: baileys-version
+    id: app-version
     attributes:
-      label: Versi Baileys
-      description: Masukkan versi dari paket Baileys yang kamu gunakan.
-      placeholder: 1.2.3
-    validations:
-      required: true
-
-  - type: input
-    id: neoxr-wb-version
-    attributes:
-      label: Versi @neoxr/wb
-      description: Masukkan versi dari paket @neoxr/wb yang kamu gunakan.
-      placeholder: 1.2.3
+      label: Versi Aplikasi
+      description: Masukkan versi WkwkChat yang kamu gunakan (jika ada).
+      placeholder: v1.0.0
     validations:
       required: true
 
   - type: input
     id: nodejs-version
     attributes:
-      label: Versi NodeJS
-      description: Masukkan versi NodeJS yang kamu gunakan.
-      placeholder: 1.2.3
+      label: Versi Node.js
+      description: Masukkan versi Node.js yang kamu gunakan.
+      placeholder: 18.20.2
+    validations:
+      required: true
+
+  - type: input
+    id: framework-version
+    attributes:
+      label: Framework / Library Terkait
+      description: |
+        Contoh: Express, Socket.IO, Vue, Firebase Admin SDK.
+        Sertakan versinya jika memungkinkan.
+      placeholder: socket.io@4.7.5
     validations:
       required: true
 
@@ -35,8 +37,39 @@ body:
     id: operating-system
     attributes:
       label: Sistem Operasi
-      description: Masukkan sistem operasi server yang kamu gunakan.
-      placeholder: Linux Ubuntu 22
+      description: Masukkan sistem operasi server atau device yang kamu gunakan.
+      placeholder: Ubuntu 22.04 / Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Langkah untuk Mereproduksi Bug
+      description: Jelaskan langkah-langkah agar bug bisa muncul kembali.
+      placeholder: |
+        1. Login sebagai user
+        2. Join room
+        3. Kirim pesan
+        4. Terjadi error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Hasil yang Diharapkan
+      description: Jelaskan apa yang seharusnya terjadi.
+      placeholder: Pesan berhasil terkirim ke semua user di room.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-result
+    attributes:
+      label: Hasil yang Terjadi
+      description: Jelaskan apa yang benar-benar terjadi.
+      placeholder: Pesan tidak terkirim dan server crash.
     validations:
       required: true
 
@@ -45,23 +78,25 @@ body:
     attributes:
       label: Informasi Tambahan
       description: |
-        Jelaskan permasalahan yang kamu alami. Kamu bisa melampirkan file log atau screenshot jika perlu.
-      placeholder: Tulis detail permasalahan di sini...
+        Sertakan log error, screenshot, atau informasi tambahan lainnya
+        yang bisa membantu proses debugging.
+      placeholder: Tempel log error di sini...
     validations:
-      required: true
+      required: false
 
   - type: checkboxes
     id: checklist
     attributes:
       label: Daftar Periksa
       options:
-        - label: Saya menggunakan versi terbaru.
-        - label: Saya sudah memeriksa dokumentasi dan tidak menemukan jawabannya.
+        - label: Saya menggunakan versi terbaru dari WkwkChat.
+        - label: Saya sudah membaca README dan dokumentasi.
           required: true
-        - label: Saya telah mencari issue yang sudah ada dan memastikan ini bukan duplikat.
+        - label: Saya sudah mencari issue yang ada dan memastikan ini bukan duplikat.
           required: true
-        - label: Saya menggunakan aplikasi whastapp versi terbaru.
-        - label: Saya telah memberikan informasi yang cukup.
+        - label: Saya sudah menyertakan langkah reproduksi yang jelas.
           required: true
-        - label: Jika informasi saya tidak jelas (asal isi), tidak masalah apabila laporan saya tidak direspons.
+        - label: Saya sudah memberikan informasi yang cukup untuk debugging.
+          required: true
+        - label: Jika laporan saya kurang jelas, saya memahami bahwa issue ini bisa ditutup.
           required: true
