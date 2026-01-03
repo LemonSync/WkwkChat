@@ -1,13 +1,6 @@
 WkwkChat
 ========
 
-WkwkChat adalah aplikasi real-time chat berbasis web menggunakan
-Vue.js + Node.js + Socket.IO + Firebase, dilengkapi sistem role
-(user & creator), room chat, dan autentikasi JWT + OTP WhatsApp.
-
-Project ini dibuat untuk pembelajaran, eksperimen, dan penggunaan
-skala kecil–menengah (sekolah, komunitas, tim kecil).
-
 ------------------------------------------------------------
 
 FITUR UTAMA
@@ -94,8 +87,7 @@ WkwkChat/
 LOGIKA ALUR SISTEM (FLOWCHART)
 -----------------------------
 
-Diagram berikut menjelaskan alur logika utama WkwkChat,
-mulai dari user login hingga mengirim pesan ke dalam room.
+Diagram berikut menjelaskan alur logika utama WkwkChat
 
 ```mermaid
 flowchart TD
