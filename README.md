@@ -91,6 +91,39 @@ WkwkChat/
 
 ------------------------------------------------------------
 
+LOGIKA ALUR SISTEM (FLOWCHART)
+-----------------------------
+
+Diagram berikut menjelaskan alur logika utama WkwkChat,
+mulai dari user login hingga mengirim pesan ke dalam room.
+
+```mermaid
+flowchart TD
+  A[Client Request] --> B{Sudah Login?}
+
+  B -->|Belum| C[OTP Verification]
+  C --> D[Register / Login User]
+  D --> E[Generate JWT]
+
+  B -->|Sudah| E[Valid JWT]
+
+  E --> F[Join Chat Room]
+  F --> G{Role User}
+
+  G -->|creator| H[Create Room]
+  H --> I[Broadcast Room Created]
+
+  G -->|user| J[Join Existing Room]
+
+  I --> K[Send Message]
+  J --> K[Send Message]
+
+  K --> L[Save Message to Firestore]
+  L --> M[Broadcast Message via Socket.IO]
+```
+
+----------------------------------------------------------
+
 CARA MENJALANKAN
 ----------------
 
