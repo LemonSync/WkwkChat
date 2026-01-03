@@ -2,6 +2,8 @@ name: BUG Report
 title: "[BUG] "
 description: Gunakan template ini untuk melaporkan bug atau error pada WkwkChat
 labels: [bug]
+assignees:
+  - LemonSync
 
 body:
   - type: input
