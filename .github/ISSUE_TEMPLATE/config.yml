@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Have you checked the Baileys issue?
+    about: Check the open/closed issues to make sure the bug comes from Baileys or from the script.
+    url: https://github.com/WhiskeySockets/Baileys/issues
