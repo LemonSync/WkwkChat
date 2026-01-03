@@ -85,8 +85,8 @@ WkwkChat/
 |
 ├── main.js
 ├── .env
-├── package.json
-└── README.txt
+└── package.json
+
 ```
 
 ------------------------------------------------------------
