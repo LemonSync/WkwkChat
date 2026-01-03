@@ -1,38 +1,58 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: Laporan BUG
+title: "[BUG] "
+description: Gunakan template ini untuk melaporkan masalah
+labels: [bug]
+body:
 
----
+  - type: input
+    id: baileys-version
+    attributes:
+      label: Versi Baileys
+      description: Masukkan versi dari paket Baileys yang kamu gunakan.
+      placeholder: 1.2.3
+    validations:
+      required: true
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+  - type: input
+    id: nodejs-version
+    attributes:
+      label: Versi NodeJS
+      description: Masukkan versi NodeJS yang kamu gunakan.
+      placeholder: 1.2.3
+    validations:
+      required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+  - type: input
+    id: operating-system
+    attributes:
+      label: Sistem Operasi
+      description: Masukkan sistem operasi server yang kamu gunakan.
+      placeholder: Linux Ubuntu 22
+    validations:
+      required: true
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Informasi Tambahan
+      description: |
+        Jelaskan permasalahan yang kamu alami. Kamu bisa melampirkan file log atau screenshot jika perlu.
+      placeholder: Tulis detail permasalahan di sini...
+    validations:
+      required: true
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Daftar Periksa
+      options:
+        - label: Saya menggunakan versi terbaru.
+        - label: Saya sudah memeriksa dokumentasi dan tidak menemukan jawabannya.
+          required: true
+        - label: Saya telah mencari issue yang sudah ada dan memastikan ini bukan duplikat.
+          required: true
+        - label: Saya menggunakan aplikasi whastapp versi terbaru.
+        - label: Saya telah memberikan informasi yang cukup.
+          required: true
+        - label: Jika informasi saya tidak jelas (asal isi), tidak masalah apabila laporan saya tidak direspons.
+          required: true
