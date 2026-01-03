@@ -1,7 +1,7 @@
 name: Feature Request
 title: "[FEATURE] "
 description: Gunakan template ini untuk mengusulkan fitur baru atau peningkatan pada WkwkChat
-labels: [enhancement]
+labels: [request]
 
 body:
   - type: input
