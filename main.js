@@ -149,13 +149,17 @@ try {
   console.error("❌ Failed to init WhatsApp:", error.message);
 }
 
+
 // ===============================
+
 
 app.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+
 // Whatsapp QR Login ================
+
 
 app.get("/whatsapp/login", async (_, res) => {
   try {
@@ -352,7 +356,21 @@ app.get("/whatsapp/status", (_, res) => {
   }
 });
 
+app.get("/health", (_, res) => {
+  const status = {
+    server: "running",
+    timestamp: new Date().toISOString(),
+    firebase: "connected",
+    whatsapp: getWhatsAppStatus(),
+    memory: process.memoryUsage(),
+    uptime: process.uptime()
+  };
+  res.json(status);
+});
+
+
 // Register ================================
+
 
 app.post("/api/register", async (req, res) => {
   try {
@@ -372,6 +390,7 @@ app.post("/api/register", async (req, res) => {
     res.status(400).json({ ok: false, message: err.message });
   }
 });
+
 
 app.post("/api/register/otp/send", async (req, res) => {
   console.log("📱 OTP Send request:", req.body);
@@ -447,7 +466,9 @@ app.post("/api/register/otp/verify", async (req, res) => {
   }
 });
 
+
 // Reset Password ================================
+
 
 app.post("/api/reset", async (req, res) => {
   try {
@@ -466,6 +487,7 @@ app.post("/api/reset", async (req, res) => {
     res.status(400).json({ ok: false, message: err.message });
   }
 });
+
 
 app.post("/api/reset/otp/send", async (req, res) => {
   console.log("📱 Reset OTP Send request:", req.body);
@@ -516,7 +538,9 @@ app.post("/api/reset/otp/verify", async (req, res) => {
   }
 });
 
+
 // Login ================================
+
 
 app.post("/api/login", async (req, res) => {
   try {
@@ -556,19 +580,9 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.get("/health", (_, res) => {
-  const status = {
-    server: "running",
-    timestamp: new Date().toISOString(),
-    firebase: "connected",
-    whatsapp: getWhatsAppStatus(),
-    memory: process.memoryUsage(),
-    uptime: process.uptime()
-  };
-  res.json(status);
-});
 
 // ===============================
+
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
