@@ -1,5 +1,5 @@
 {
-  "name": "whatsapp-baileys-server",
+  "name": "wkwkchatweb",
   "version": "1.0.0",
   "main": "main.js",
   "type": "commonjs",
@@ -18,8 +18,8 @@
   "license": "ISC",
   "description": "WhatsApp OTP & Chat Server using Baileys (QR login, no puppeteer)",
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.18",
     "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
