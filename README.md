@@ -1,186 +1,134 @@
-WkwkChat
-========
+<h3 align="center">WKWKCHAT</h3>
 
-------------------------------------------------------------
+### DAFTAR ISI
+* [PENGENALAN](#pengenalan)
+* [FITUR](#fitur)
+* [PENGGUNAAN](#penggunaan)
+* [PENGINSTALAN](#penginstalan)
+* [HIMBAUAN](#himbauan)
 
-FITUR UTAMA
------------
 
-- Autentikasi Aman
-  - Login & register via OTP WhatsApp
-  - Password terenkripsi (bcrypt)
-  - JWT untuk HTTP & Socket
+# Pengenalan
 
-- Sistem Role
-  - user     : join room & kirim pesan
-  - creator  : buat room & kirim pesan
+###### Apa itu `WkwkChat` ?
+Jadi, Singkatnya `WkwkChat` adalah sebuah website yang dimana dapat mengirimkan pesan secara **<ins>Real Time</ins>**. Mengapa bisa begitu ? Ya Karena `WkwkChat` menggunakan teknologi socket dan database yang mendukung perubahan field secara real time juga. Dilengkapi dengan sistem daftar, login, dan reset password yang bagus. Website ini juga dilengkapi dengan auth yang mantap juga.
 
-- Chat Room
-  - Join room via Room ID
-  - Creator dapat membuat room
-  - Chat real-time (Socket.IO)
+###### Emang Aman ?
+Ya, tentu saja. Karena website ini dilengkapi dengan *antispam* otp menggunakan logika **captcha**. Dan peminimalisiran kebocoran data atau DDOS.
 
-- Firebase Firestore
-  - Data user & role
-  - Data room
-  - Riwayat pesan
+###### Emang, Teknologi apa aja yang dipakai ?
+Teknologi yang dipakai dalam website `WkwkChat` ini adalah teknologi sederhana, dan mungkin semua orang pernah menggunakannya.
+Didasari oleh **NodeJS** website ini menggunakan:
 
-- Realtime Event
-  - Join / leave notification
-  - Broadcast pesan ke semua user dalam room
+Frontend
+* VueJS
+* JWT DECODE
+* SocketIO (Cient)
+* Vue Router
+ 
+Backend
+* Express
+* Express Session
+* SocketIO
+* Firebase Admin SDK
+*  Baileys (Whatsapp Web API)
+*  JWT
+*  bcryptjs
+*  Canvas
+ 
+Database
+* Firebase Firestore
 
-------------------------------------------------------------
+###### Kemana OTP akan dikirim saat verifikasi ?
+Nah, Kerena untuk daftar memerlukan verifikasi, Website `WkwkChat` menggunakan Baileys Whatsapp untuk mengirim verifikasi.
 
-TECH STACK
-----------
+###### Maksud dari menggunakan Baileys ?
+Baileys adalah WhatsApp Web API, jadi secara langsung itu seperti menautkan akun whatsapp(yang digunakan untuk mengirim otp) ke sistemnya. jadi ibaratkan saat kita ingin memasang whatsapp kita ke komputer atau situs desktop lainnya. Contohnya **[Web WhatsApp](https://web.whatsapp.com)**.
 
-Frontend:
-- Vue 3 (Composition API)
-- Vue Router
-- Socket.IO Client
-- JWT Decode
+###### Untuk logika captchanya bagaimana ?
+Nah, website ini menggunakan logika captcha untuk sesi antispam agar *Anonymous* tidak dapat melakukan DDOS disini. Logika yang dipakai cukup sederhana, yaitu mengubah kode menjadi gambar dan mengirimnya ke client(user) dan saat user menginput kode, sistem akan mengecek kebenaran kode tersebut.
 
-Backend:
-- Node.js
-- Express
-- Socket.IO
-- Firebase Admin SDK
-- Baileys (WhatsApp Web API)
-- JWT
-- bcryptjs
+###### Apa tujuan terciptanya website ini ?
+Jujur secara pribadi, saya(Eres) membangun website ini untuk melatih kemampuan saya(Eres) dalam segi pemrograman. Baik itu dibagian Frontend yaitu UI atau UXnya ataupun Backend dalam segi logikanya.
 
-Database:
-- Firebase Firestore
+###### Apakah kodenya dapat dimodifikasi oleh siapa saja ?
+Ya, tentu saja! Asalkan menaruh `Kredit/WM` saja hehe.
 
-Deployment:
-- NAT VPS / VPS kecil
-- PM2 (recommended)
-- Nginx (opsional)
+-----------------
 
-------------------------------------------------------------
+<br><br>
+# Fitur
 
-STRUKTUR PROYEK
----------------
+Fitur yang terdapat di website `WkwkChat` ini adalah:
 
-``` md
-WkwkChat/
-|
-├── public/
-├── firebase/
-|   ├── firebase.js
-|   └── firebaseHelper.js
-|
-├── whatsapp/
-|   └── baileys.js
-|
-├── utils/
-|   └── allFunction.js
-|
-├── main.js
-├── .env
-└── package.json
+Auth
+* Login
+* Daftar
+* Lupa Password
+* Captcha
+* Kirim OTP
+* Route (alihkan jika belum masuk)
 
-```
+Chat
+* Join Room (user, creator)
+* Send Message (user, creator)
+* Logout (user, creator)
+* Create Room (creator)
 
-------------------------------------------------------------
-
-LOGIKA ALUR SISTEM (FLOWCHART)
------------------------------
-
-Diagram berikut menjelaskan alur logika utama WkwkChat
-
-```mermaid
-flowchart TD
-  A[Client Request] --> B{Sudah Login?}
-
-  B -->|Belum| C[OTP Verification]
-  C --> D[Register / Login User]
-  D --> E[Generate JWT]
-
-  B -->|Sudah| E[Valid JWT]
-
-  E --> F[Join Chat Room]
-  F --> G{Role User}
-
-  G -->|creator| H[Create Room]
-  H --> I[Broadcast Room Created]
-
-  G -->|user| J[Join Existing Room]
-
-  I --> K[Send Message]
-  J --> K[Send Message]
-
-  K --> L[Save Message to Firestore]
-  L --> M[Broadcast Message via Socket.IO]
-```
-
-----------------------------------------------------------
-
-CARA MENJALANKAN
 ----------------
 
-Install dependency:
-npm install
+<br><br>
+# Penggunaan
 
-Jalankan server:
-node main.js
+Petunjuk penggunaan kode adalah sebagai berikut:
 
-Rekomendasi (PM2):
-npm install -g pm2
-pm2 start main.js --name wkwkchat
-pm2 save
+1. serviceAccountKey.json
+   
+   Pastikan kamu mengambil key firebase kamu dan menaruhnya di path [./json/](https://github.com/LemonSync/WkwkChat/tree/main/json)
+   **Note**: Jangan sekali-kali menyebarkan serviceAccountKey kamu ke public
 
-------------------------------------------------------------
+2. ENV
+   
+   Berikut adalah nilai env yang dibutuhkan
+   SESSION_SECRET = [string] Secret key untuk Express Session
+   JWT_SECRET = [string] Secret Key Untuk JWT
+   WHATSAPP_RESTART_PASSWORD = [string] Password untuk **`/whatsapp/restart?sandi=password`**
 
-SOCKET EVENT
-------------
+3. WhatsApp Sync
 
-Client ke Server:
-- create-room
-- join-room
-- send-message
+   1. Masuk ke `/whatsapp/login/`
+   2. Scan QR jika sudah muncul
+   3. Tunggu sejenak
+   4. Selesai
+  
+4. WhatsApp Restart
 
-Server ke Client:
-- room-created
-- joined
-- message
-- system
-- error
+   1. Masuk ke `/whatsapp/restart/?sandi=sesuai-env`
+   2. Tunggu sejenak
+   3. Jika berhasil, silahkan login ke `/whatsapp/login/`
+  
+5. Session Baileys
 
-------------------------------------------------------------
+   Ada di `/sesi_wa/` dan akan dihapus otomatis jika sesinya korup
 
-HAK AKSES ROLE
+6. Frontend
+
+   Mungkin ini Kamu butuhkan jika ingin menggunakan Frontend Kamu sendiri
+
+   ```js
+   fetch(`/api/register/otp/send`) {
+      credentials: 'include'
+   }
+   ```
+
 --------------
 
-Role     | Join Room | Kirim Pesan | Buat Room | Hapus Room
----------|-----------|-------------|-----------|------------
-user     | Ya        | Ya          | Tidak     | Tidak
-creator  | Ya        | Ya          | Ya        | Tidak
+<br><br>
 
-------------------------------------------------------------
+# Penginsatalan
 
-CATATAN PENTING
----------------
-
-- Belum ada pagination chat
-- NAT VPS menggunakan port custom (bukan 80/443)
-- Tidak disarankan untuk trafik besar tanpa optimasi
-
-------------------------------------------------------------
-
-ROADMAP (OPSIONAL)
-------------------
-
-- Load chat history saat join room
-- Admin panel
-- Typing indicator
-- Read receipt
-- Kirim file & gambar
-- Rate limit socket
-
-------------------------------------------------------------
-
-LICENSE
--------
-
-MIT License
+1. Jalankan `npm i`
+2. Jalankan `node main.js`
+3. Masuk ke `/whatsapp/login/`
+4. Scan menggunakan WhatsApp Kamu
+5. Selesai
