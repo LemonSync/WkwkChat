@@ -125,7 +125,7 @@ Petunjuk penggunaan kode adalah sebagai berikut:
 
 <br><br>
 
-# Penginsatalan
+# Penginstalan
 
 1. Jalankan `npm i`
 2. Jalankan `node main.js`
