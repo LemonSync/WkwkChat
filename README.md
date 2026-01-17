@@ -56,7 +56,8 @@ Ya, tentu saja! Asalkan menaruh `Kredit/WM` saja hehe.
 
 -----------------
 
-<br><br>
+<br>
+
 # Fitur
 
 Fitur yang terdapat di website `WkwkChat` ini adalah:
@@ -77,7 +78,8 @@ Chat
 
 ----------------
 
-<br><br>
+<br>
+
 # Penggunaan
 
 Petunjuk penggunaan kode adalah sebagai berikut:
@@ -123,7 +125,7 @@ Petunjuk penggunaan kode adalah sebagai berikut:
 
 --------------
 
-<br><br>
+<br>
 
 # Penginstalan
 
