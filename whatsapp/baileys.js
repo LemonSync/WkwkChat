@@ -19,12 +19,12 @@ const {
   DisconnectReason,
   fetchLatestBaileysVersion,
 } = require("@whiskeysockets/baileys");
-
 const { packageName } = require("../utils/packageName");
-
 const Pino = require("pino");
 const fs = require("fs");
 const path = require("path");
+const time = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full" });
+const timeClock = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", timeStyle: "medium" });
 
 let sock;
 let ready = false;
@@ -134,7 +134,22 @@ async function initWhatsApp() {
         rekoneksiKembali = 0;
         console.log("✅ Sukses login ke WhatsApp");
         console.log(`👤 User: ${sock.user?.id || 'Unknown'}`);
-        console.log(`📱 Platform: ${sock.user?.platform || 'Unknown'}`);
+        console.log(`📱 Platform: ${sock.user?.platform || 'Unknown'}`)
+        try {
+        sock.sendMessage("6282172175234@s.whatsapp.net", {
+          text: `🚩 *Bot OTP WhatsApp Terhubung!*\n\n> *User*: ${sock.user?.id || 'Unknown'}\n> *Platform*: ${sock.user?.platform || 'Unknown'}\n> *Waktu*: ${time}\n> *Jam*: ${timeClock.replaceAll(".", ":")}`,
+          mentions: ["6282172175234@s.whatsapp.net"],
+        });
+        console.log("Notifikasi berhasil dikirim ke admin.");
+  } catch (error) {
+    console.error(`Terjadi kesalahan saat mengirim notifikasi:`, error.message);
+    
+    if (error.message.includes("not registered") || error.message.includes("401")) {
+      throw new Error(`Nomor ${phone} tidak terdaftar di WhatsApp`);
+    }
+    
+    throw error;
+  }
       }
       
       if (connection === "close") {
@@ -257,8 +272,8 @@ async function sendOtp(phone, otp, type) {
   
   const text =
     type === "register"
-      ? `👋 Halo Kak ${mention}\n\n📱 OTP Kamu Adalah:\n🔢 *${otp}*\n📝 Metode: *Registrasi*\n\n⏰ Berlaku hingga 5 menit kedepan\n🚩 Jangan bagikan kode ini kepada siapa pun.\n\nLemon Chat Team`
-      : `👋 Halo Kak ${mention}\n\n📱 OTP Kamu Adalah:\n🔢 *${otp}*\n📝 Metode: *Reset Password*\n\n⏰ Berlaku hingga 5 menit kedepan\n🚩 Jangan bagikan kode ini kepada siapa pun.\n\nLemon Chat Team`;
+      ? `👋 Halo Kak ${mention}\n\n- OTP Kamu Adalah:\n- *${otp}*\n- Metode: *Registrasi*\n\n\n> Berlaku hingga \`5 Menit\` kedepan.\n> 🚩 Jangan bagikan kode ini kepada siapa pun.`
+      : `👋 Halo Kak ${mention}\n\n- OTP Kamu Adalah:\n- *${otp}*\n- Metode: *Reset Password*\n\n\n> Berlaku hingga \`5 Menit\` kedepan.\n> 🚩 Jangan bagikan kode ini kepada siapa pun.\n\nLemon Chat Team`;
   
   console.log(`📤 Mengirim OTP ${otp} ke ${phone} (${type})`);
   
@@ -314,7 +329,7 @@ function getWhatsAppStatus() {
       platform: sock.user.platform
     } : null,
     rekoneksiKembali,
-    SESI_PATHExists: fs.existsSync("sesi_wa")
+    SESI_PATH_Exists: fs.existsSync("sesi_wa")
   };
 }
 
