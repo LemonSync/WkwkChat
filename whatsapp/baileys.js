@@ -1,345 +1,497 @@
-/*
+const express = require("express");
+const session = require('express-session');
+require("dotenv").config();
+const cors = require("cors");
+const path = require("path");
+const jwt = require("jsonwebtoken");
+const http = require("http");
+const { Server } = require("socket.io");
+const QRCode = require("qrcode");
+const admin = require("firebase-admin");
+const { db } = require("./firebase/firebase");
 
-Menngunakan Baileys untuk integrasi WhatsApp
-versi: 4.4.0
-repository: https://github.com/WhiskeySockets/Baileys
-sumber: https://www.whiskeysockets.com/
-License: MIT
-kredit: WhiskeySockets
-modifikasi: ERES FRAN SETIA SIMBOLON
-
-Bebas dimodifikas oleh siapa saja.
-
-*/
-
+const { createCaptcha } = require("./utils/createCaptcha");
 
 const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-} = require("@whiskeysockets/baileys");
-const { packageName } = require("../utils/packageName");
-const Pino = require("pino");
-const fs = require("fs");
-const path = require("path");
-const time = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full" });
-const timeClock = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", timeStyle: "medium" });
+  HttpError,
+  Lemon
+} = require("./utils/allFunction");
 
-let sock;
-let ready = false;
-let isInit = false;
-let qrNow = null;
-let rekoneksiKembali = 0;
-const MAX_REKONEKSI = 5;
+const {
+  createOtp,
+  verifyOtp,
+  registerUser,
+  loginUser,
+  resetPassword,
+  saveMessage,
+} = require("./firebase/firebaseHelper");
 
-function hapusSesiKorup() {
-  const SESI_PATH = "sesi_wa";
-  try {
-    if (fs.existsSync(SESI_PATH)) {
-      console.log("Mebersihkan session korup....");
-      fs.rmSync(SESI_PATH, { recursive: true, force: true });
-    }
-    
-    const files = fs.readdirSync(".");
-    files.forEach(file => {
-      if (file.includes(".json") && file.includes("session")) {
-        fs.unlinkSync(file);
-      }
-    });
-    
-    console.log("Session lama dibersihkan");
-    return true;
-  } catch (error) {
-    console.log("Gagal Mmebersihkan session:", error.message);
-    return false;
-  }
-}
-
-async function initWhatsApp() {
-  if (isInit) {
-    console.log("Masih dalam proses init");
-    return;
-  }
-  
-  try {
-    isInit = true;
-    ready = false;
-    qrNow = null;
-    
-    console.log("Memulai inisialisasi.....");
-    
-    if (rekoneksiKembali >= MAX_REKONEKSI) {
-      console.log("Terlalu banyak percobaan reconnect, membersihkan session....");
-      hapusSesiKorup();
-      rekoneksiKembali = 0;
-    }
-    
-    const { state, saveCreds } = await useMultiFileAuthState("sesi_wa");
-    
-    const { version, isLatest } = await fetchLatestBaileysVersion();
-    console.log(`Versi saat ini: v${version.join('.')} ${isLatest ? '(terbaru)' : ''}`);
-    
-
-    // Sebaiknya jangan diubah ygy
-    sock = makeWASocket({
-      version,
-      auth: state,
-      logger: Pino({ level: "warn" }),
-      printQRInTerminal: true,
-      browser: packageName(),
-      userAgent: "Mozilla/5.0 (Lemon-Chat-System/1.0.0) AppleWebKit/537.36",
-      syncFullHistory: false,
-      markOnlineOnConnect: false,
-      defaultQueryTimeoutMs: 30000,
-      connectTimeoutMs: 30000,
-      keepAliveIntervalMs: 10000,
-      emitOwnEvents: true,
-      mobile: false,
-      businessName: "Lemon Sync",
-      businessWebsite: ["https://github.com/lemonsync"],
-      retryRequestDelayMs: 1000,
-      fireInitQueries: true,
-      generateHighQualityLinkPreview: true,
-      getMessage: async (key) => {
-        return {
-          conversation: "pesan"
-        };
-      },
-      transactionOpts: {
-        maxCommitRetries: 3,
-        delayBetweenTriesMs: 1000
-      }
-    });
-
-    sock.ev.on("creds.update", async (creds) => {
-      console.log("Mengupdate key.....");
-      await saveCreds();
-    });
-
-    sock.ev.on("connection.update", (update) => {
-      const { connection, lastConnect, qr, isLoginNew } = update;
-      
-      console.log(`Update koneksi: ${connection}`);
-      
-      if (qr) {
-        qrNow = qr;
-        console.log("Scan qr di /whatsapp/login");
-        rekoneksiKembali = 0;
-      }
-      
-      if (connection === "open") {
-        ready = true;
-        qrNow = null;
-        rekoneksiKembali = 0;
-        console.log("✅ Sukses login ke WhatsApp");
-        console.log(`👤 User: ${sock.user?.id || 'Unknown'}`);
-        console.log(`📱 Platform: ${sock.user?.platform || 'Unknown'}`)
-        try {
-        sock.sendMessage("6282172175234@s.whatsapp.net", {
-          text: `🚩 *Bot OTP WhatsApp Terhubung!*\n\n> *User*: ${sock.user?.id || 'Unknown'}\n> *Platform*: ${sock.user?.platform || 'Unknown'}\n> *Waktu*: ${time}\n> *Jam*: ${timeClock.replaceAll(".", ":")}`,
-          mentions: ["6282172175234@s.whatsapp.net"],
-        });
-        console.log("Notifikasi berhasil dikirim ke admin.");
-  } catch (error) {
-    console.error(`Terjadi kesalahan saat mengirim notifikasi:`, error.message);
-    
-    if (error.message.includes("not registered") || error.message.includes("401")) {
-      throw new Error(`Nomor ${phone} tidak terdaftar di WhatsApp`);
-    }
-    
-    throw error;
-  }
-      }
-      
-      if (connection === "close") {
-        ready = false;
-        isInit = false;
-        
-        const statusCode = lastConnect?.error?.output?.statusCode;
-        const error = lastConnect?.error;
-        
-        console.log("❌ WhatsApp terputus");
-        console.log("Status code:", statusCode);
-        console.log("Error:", error?.message || "Unknown error");
-        
-        if (error?.message?.includes("Bad MAC")) {
-          console.log("ERROR: Bad MAC - Session corrupt!");
-          console.log("Membersihkan session dan membuat baru...");
-          hapusSesiKorup();
-        }
-        
-        if (statusCode === DisconnectReason.loggedOut) {
-          console.log("Log out dari WhatsApp");
-          console.log("Membersihkan session...");
-          hapusSesiKorup();
-          rekoneksiKembali = 0;
-        }
-        
-        if (statusCode === DisconnectReason.connectionLost) {
-          rekoneksiKembali++;
-          console.log(`Percobaan rekoneksi ${rekoneksiKembali}/${MAX_REKONEKSI}`);
-        }
-        
-        const shouldRekoneksi = 
-          statusCode !== DisconnectReason.loggedOut && 
-          rekoneksiKembali < MAX_REKONEKSI;
-        
-        if (shouldRekoneksi) {
-          console.log(`rEkoneksi dalam 3 detik...`);
-          setTimeout(() => {
-            initWhatsApp();
-          }, 3000);
-        } else {
-          console.log("Masa rekoneksi sdah habis....");
-          console.log("Restart hosting/server untuk mendapatkan qr baru");
-        }
-      }
-      
-      if (isLoginNew) {
-        console.log("Login terdeteksi");
-        ready = true;
-      }
-    });
-
-    sock.ev.on("ws-close", () => {
-      console.log("🔌 WebSocket closed");
-    });
-    
-    sock.ev.on("ws-error", (error) => {
-      console.log("🔥 WebSocket error:", error);
-    });
-
-  } catch (error) {
-    console.error("🔥 Gagal inisialisasi WhatsApp:", error.message);
-    console.error("Stack:", error.stack);
-    
-    isInit = false;
-    ready = false;
-    
-    if (error.message.includes("Bad MAC") || error.message.includes("corrupt")) {
-      console.log("Membersihkan sesi korup....");
-      hapusSesiKorup();
-    }
-    
-    console.log("Coba lagi dalam 5 detik.....");
-    setTimeout(() => {
-      initWhatsApp();
-    }, 5000);
-  }
-}
-
-function getQR() {
-  return qrNow;
-}
-
-function isWhatsappReady() {
-  if (sock && sock.user) {
-    return ready && sock.user.id !== undefined;
-  }
-  return false;
-}
-
-async function sendMessage(phone, text) {
-  if (!isWhatsappReady()) {
-    throw new Error("WhatsApp belum siap. Pastikan sudah scan QR di /whatsapp/login");
-  }
-  
-  if (!sock) {
-    throw new Error("WhatsApp socket tidak tersedia");
-  }
-  
-  const jid = phone.replace(/\D/g, "") + "@s.whatsapp.net";
-  console.log(`Mengirim pesan ke ${jid}`);
-  
-  try {
-    const result = await sock.sendMessage(jid, { text });
-    console.log(`Pesan terkirim ke ${phone}`);
-    return result;
-  } catch (error) {
-    console.error(`Gagal mengirim ke ${phone}:`, error.message);
-    throw error;
-  }
-}
-
-async function sendOtp(phone, otp, type) {
-  if (!isWhatsappReady()) {
-    throw new Error("WhatsApp belum siap. Pastikan sudah scan QR di /whatsapp/login");
-  }
-  
-  const jid = phone.replace(/\D/g, "") + "@s.whatsapp.net";
-  const mention = `@${jid.split("@")[0]}`;
-  
-  const text =
-    type === "register"
-      ? `👋 Halo Kak ${mention}\n\n- OTP Kamu Adalah:\n- *${otp}*\n- Metode: *Registrasi*\n\n\n> Berlaku hingga \`5 Menit\` kedepan.\n> 🚩 Jangan bagikan kode ini kepada siapa pun.`
-      : `👋 Halo Kak ${mention}\n\n- OTP Kamu Adalah:\n- *${otp}*\n- Metode: *Reset Password*\n\n\n> Berlaku hingga \`5 Menit\` kedepan.\n> 🚩 Jangan bagikan kode ini kepada siapa pun.\n\nLemon Chat Team`;
-  
-  console.log(`📤 Mengirim OTP ${otp} ke ${phone} (${type})`);
-  
-  try {
-    const result = await sock.sendMessage(jid, {
-      text,
-      mentions: [jid],
-    });
-    
-    console.log(`✅ OTP berhasil dikirim ke ${phone}`);
-    return result;
-  } catch (error) {
-    console.error(`❌ Gagal mengirim OTP ke ${phone}:`, error.message);
-    
-    if (error.message.includes("not registered") || error.message.includes("401")) {
-      throw new Error(`Nomor ${phone} tidak terdaftar di WhatsApp`);
-    }
-    
-    throw error;
-  }
-}
-
-function restartWhatsApp() {
-  console.log("🔄 Manual restart WhatsApp...");
-  
-  if (sock) {
-    try {
-      sock.end();
-    } catch (error) {
-    }
-    sock = null;
-  }
-  
-  ready = false;
-  isInit = false;
-  qrNow = null;
-  
-  hapusSesiKorup();
-  
-  setTimeout(() => {
-    initWhatsApp();
-  }, 1000);
-}
-
-function getWhatsAppStatus() {
-  return {
-    ready: isWhatsappReady(),
-    hasQR: !!qrNow,
-    isInitialized: isInit,
-    user: sock?.user ? {
-      id: sock.user.id,
-      name: sock.user.name,
-      platform: sock.user.platform
-    } : null,
-    rekoneksiKembali,
-    SESI_PATH_Exists: fs.existsSync("sesi_wa")
-  };
-}
-
-module.exports = {
+const {
   initWhatsApp,
-  getQR,
   isWhatsappReady,
-  sendMessage,
+  getQR,
   sendOtp,
   restartWhatsApp,
   getWhatsAppStatus,
   hapusSesiKorup
-};
+} = require("./whatsapp/baileys");
+
+const app = express();
+
+// ===============================
+
+app.set("trust proxy", 1);
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  })
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+    secret: 'lemon-cool',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 300000 }
+}));
+
+// ===============================
+
+app.use(express.static(path.join(__dirname, "public")));
+
+// ===============================
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+
+// ===============================
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("Unauthorized"));
+
+  try {
+    socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    next(new Error("Unauthorized"));
+  }
+});
+
+// ===============================
+
+io.on("connection", (socket) => {
+  console.log("🔌 Connected:", socket.user.username);
+
+  // Buat Room
+  socket.on("create-room", async (roomId) => {
+    try {
+      if (socket.user.role !== "creator")
+        return socket.emit("error", "Kamu Tidak Di Izinkan Untuk Membuat Room");
+
+      if (!roomId) return socket.emit("error", "Room ID wajib");
+
+      const ref = db.collection("rooms").doc(roomId);
+      const snap = await ref.get();
+
+      if (snap.exists) return socket.emit("error", "Room sudah ada");
+
+      await ref.set({
+        roomId,
+        createdBy: socket.user.phone,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      socket.emit("room-created", roomId);
+    } catch (e) {
+      socket.emit("error", e.message);
+    }
+  });
+
+  // Join Room
+  socket.on("join-room", async (roomId) => {
+    if (!roomId) return;
+
+    const ref = db.collection("rooms").doc(roomId);
+    const snap = await ref.get();
+
+    if (!snap.exists) return socket.emit("error", "Room tidak ditemukan");
+
+    socket.join(roomId);
+
+    socket.emit("joined", roomId);
+    socket.to(roomId).emit("system", {
+      text: `${socket.user.username} bergabung`,
+      time: Date.now(),
+    });
+  });
+
+  // Kirim Pesan
+  socket.on("send-message", async ({ roomId, message }) => {
+    if (!roomId || !message) return;
+
+    const roomSnap = await db.collection("rooms").doc(roomId).get();
+    if (!roomSnap.exists) return socket.emit("error", "Room tidak ditemukan");
+
+    await saveMessage({
+      roomId,
+      user: socket.user.username,
+      text: message,
+    });
+
+    io.to(roomId).emit("message", {
+      user: socket.user.username,
+      text: message,
+      time: Date.now(),
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Disconnected:", socket.user.username);
+  });
+});
+
+try {
+  initWhatsApp();
+  console.log("🔄 WhatsApp initialization started");
+} catch (error) {
+  console.error("❌ Failed to init WhatsApp:", error.message);
+}
+
+
+// ===============================
+
+
+app.get("/", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+
+// Whatsapp QR Login ================
+
+
+app.get("/whatsapp/login", async (_, res) => {
+  try {
+    const qr = getQR();
+    const status = getWhatsAppStatus();
+
+    if (qr) {
+      const qrImg = await QRCode.toDataURL(qr);
+      return res.send(Lemon.createHTMLLogin(status, qrImg));
+    }
+
+    if (status.ready) {
+      res.send(Lemon.createHTMLLoginSukses(status));
+    } else {
+      res.send(Lemon.createHTMLLoading());
+    }
+  } catch (error) {
+    console.error("QR page error:", error);
+    res.status(500).send(Lemon.createHTMLError(error));
+  }
+});
+
+app.get("/whatsapp/restart", (req, res) => {
+  try {
+    const { sandi } = req.query;
+    if (!sandi) {
+      return res.status(400).json({ ok: false, message: "Masukkan kata sandi di req body. /whatsapp/restart?sandi=12345" });
+    }
+    if (sandi !== process.env.WHATSAPP_RESTART_PASSWORD) {
+      return res.status(403).json({ ok: false, message: "Kata sandi salah" });
+    }
+    console.log("🔄 Manual WhatsApp restart requested");
+    restartWhatsApp();
+    res.json({ ok: true, message: "WhatsApp restart initiated" });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.get("/whatsapp/clean", (_, res) => {
+  try {
+    console.log("Manual session clean requested");
+    hapusSesiKorup();
+    setTimeout(() => {
+      initWhatsApp();
+    }, 1000);
+    res.json({ ok: true, message: "Session cleaned and restarting" });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.get("/whatsapp/status", (_, res) => {
+  try {
+    const status = getWhatsAppStatus();
+    res.json({ ok: true, status });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+app.get("/health", (_, res) => {
+  const status = {
+    server: "running",
+    timestamp: new Date().toISOString(),
+    firebase: "connected",
+    whatsapp: getWhatsAppStatus(),
+    memory: process.memoryUsage(),
+    uptime: process.uptime()
+  };
+  res.json(status);
+});
+
+// Captcha ================================
+
+app.get("/api/captcha", async (req, res) => {
+  try {
+    const imageBuffer = await createCaptcha(req);
+    res.writeHead(200, {
+      'Content-Type': 'image/jpeg',
+      'Content-Length': imageBuffer.length
+    });
+    res.end(imageBuffer);
+  } catch (err) {
+    console.error("Captcha error:", err.message);
+    res.status(500).json({ ok: false, message: "Gagal membuat captcha" });
+  }
+});
+
+
+// Register ================================
+
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { phone, username, password, code } = req.body;
+    if (!phone || !username || !password || !code)
+      throw new Error("Data tidak lengkap");
+
+    Lemon.checkNumber(phone);
+
+    const otpCheck = await verifyOtp(phone, code, "register");
+    if (!otpCheck.valid) throw new Error("OTP tidak valid");
+
+    await registerUser({ phone, username, password });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Register error:", err.message);
+    res.status(400).json({ ok: false, message: err.message });
+  }
+});
+
+
+app.post("/api/register/otp/send", async (req, res) => {
+  try {
+    const { phone, captcha } = req.body;
+    if (!phone) {
+      throw new Error("Nomor telepon wajib diisi");
+    }
+
+    const storedCaptcha = req.session.captchaCode;
+    delete req.session.captchaCode;
+
+    if (!storedCaptcha) {
+      throw new Error("Captcha kedaluwarsa. Silakan klik gambar untuk kode baru.");
+    }
+    if (!captcha || captcha.toUpperCase() !== storedCaptcha.toUpperCase()) {
+      throw new Error("Kode Captcha salah. Silakan coba lagi.");
+    }
+
+    const whatsappStatus = getWhatsAppStatus();
+    if (!whatsappStatus.ready) {
+      throw new Error("Terjadi kesalahan pada server, Silahkan hubungi 6282172175234");
+    }
+
+    Lemon.checkNumber(phone);
+    const otp = await createOtp(phone, "register");
+    await sendOtp(phone, otp, "register");
+
+    res.json({ 
+      ok: true, 
+      message: "OTP berhasil dikirim ke WhatsApp",
+      debug: { 
+        phone, 
+        otpLength: otp.length,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error("❌ OTP Send Error:", err.message);
+    console.error("Stack:", err.stack);
+    
+    let errorMessage = err.message;
+    if (err.message.includes("not registered")) {
+      errorMessage = `Nomor ${req.body?.phone} tidak terdaftar di WhatsApp`;
+    } else if (err.message.includes("WhatsApp belum siap")) {
+      errorMessage = "WhatsApp server belum siap";
+    } else if (err.message.includes("Bad MAC")) {
+      errorMessage = "Session WhatsApp bermasalah";
+    }
+    
+    res.status(400).json({ 
+      ok: false, 
+      message: errorMessage,
+      error: err.toString(),
+      help: "Buka /whatsapp/login untuk scan QR WhatsApp"
+    });
+  }
+});
+
+app.post("/api/register/otp/verify", async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    
+    const result = await verifyOtp(phone, code, "register", false);
+    
+    res.json({ valid: result.valid });
+  } catch (err) {
+    console.error("OTP verify error:", err.message);
+    res.status(400).json({ valid: false, message: err.message });
+  }
+});
+
+
+// Reset Password ================================
+
+
+app.post("/api/reset", async (req, res) => {
+  try {
+    const { phone, code, newPassword } = req.body;
+    if (!phone || !code || !newPassword) throw new Error("Data tidak lengkap");
+
+    Lemon.checkNumber(phone);
+
+    const otpCheck = await verifyOtp(phone, code, "reset");
+    if (!otpCheck.valid) throw new Error("OTP tidak valid");
+
+    await resetPassword({ phone, newPassword });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Reset password error:", err.message);
+    res.status(400).json({ ok: false, message: err.message });
+  }
+});
+
+
+app.post("/api/reset/otp/send", async (req, res) => {
+  
+  try {
+    const { phone } = req.body;
+    if (!phone) throw new Error("Phone required");
+    
+    const whatsappStatus = getWhatsAppStatus();
+    if (!whatsappStatus.ready) {
+      throw new Error("WhatsApp belum siap. Silakan scan QR di /whatsapp/login");
+    }
+
+    Lemon.checkNumber(phone);
+
+    const otp = await createOtp(phone, "reset");
+    await sendOtp(phone, otp, "reset");
+
+    res.json({ 
+      ok: true, 
+      message: "OTP reset berhasil dikirim",
+      debug: { phone, timestamp: new Date().toISOString() }
+    });
+  } catch (err) {
+    console.error("Reset OTP send error:", err.message);
+    
+    let errorMessage = err.message;
+    if (err.message.includes("not registered")) {
+      errorMessage = `Nomor ${req.body?.phone} tidak terdaftar di WhatsApp`;
+    }
+    
+    res.status(400).json({ 
+      ok: false, 
+      message: errorMessage,
+      help: "Buka /whatsapp/login untuk scan QR WhatsApp"
+    });
+  }
+});
+
+app.post("/api/reset/otp/verify", async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    const result = await verifyOtp(phone, code, "reset", false);
+    res.json({ valid: result.valid });
+  } catch (err) {
+    console.error("Reset OTP verify error:", err.message);
+    res.status(400).json({ valid: false, message: err.message });
+  }
+});
+
+
+// Login ================================
+
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !password) throw new Error("Data tidak lengkap");
+
+    Lemon.checkNumber(phone);
+
+    const user = await loginUser({ phone, password });
+
+    const token = jwt.sign(
+      {
+        phone: user.phone,
+        username: user.username,
+        role: user.role || "user",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ 
+      ok: true, 
+      token,
+      user: {
+        phone: user.phone,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error("Login error:", err.message);
+    res.status(401).json({ 
+      ok: false, 
+      message: err.message,
+      error: "Invalid credentials"
+    });
+  }
+});
+
+
+// ===============================
+
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.use((err, req, res, next) => {
+  console.error("🔥 GLOBAL ERROR:", err.message);
+  console.error("Stack:", err.stack);
+  
+  res.status(err.statusCode || 500).json({
+    ok: false,
+    message: err.message || "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.toString() : undefined
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server berjalan di port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`WhatsApp QR: http://localhost:${PORT}/whatsapp/login`);
+  console.log(`WhatsApp status: http://localhost:${PORT}/whatsapp/status`);
+});
