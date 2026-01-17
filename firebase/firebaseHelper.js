@@ -1,8 +1,7 @@
 const { db } = require("./firebase");
 const acak = require("bcryptjs");
 const admin = require("firebase-admin");
-const { HttpError } = require("../utils/allFunction");
-
+const { HttpError, Lemon } = require("../utils/allFunction");
 const OTP_COOLDOWN = 60 * 1000;
 
 /** Create OTP
@@ -37,9 +36,9 @@ async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
 
   if (!snap.empty) {
     const lastOtp = snap.docs[0].data();
-    if (now - (lastOtp.lastSentAt || 0) < OTP_COOLDOWN) {
+    if (now - (lastOtp.terakhirKirim || 0) < OTP_COOLDOWN) {
       const waktuTunggu = Math.ceil(
-        (OTP_COOLDOWN - (now - lastOtp.lastSentAt)) / 1000
+        (OTP_COOLDOWN - (now - lastOtp.terakhirKirim)) / 1000
       );
       throw new Error(
         `Mohon tunggu ${waktuTunggu} detik sebelum mengirim OTP lagi`
@@ -55,7 +54,7 @@ async function createOtp(phone, metodeMasuk, ttlMinutes = 5) {
     metodeMasuk,
     waktuHabis: now + ttlMinutes * 60 * 1000,
     waktuDibuat: admin.firestore.FieldValue.serverTimestamp(),
-    lastSentAt: now,
+    terakhirKirim: now,
   });
 
   return otp;
@@ -164,7 +163,7 @@ async function saveMessage({ roomId, user, text }) {
   await db.collection("rooms").doc(roomId).collection("messages").add({
     user,
     text,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    waktuDibuat: admin.firestore.FieldValue.serverTimestamp(),
   });
 }
 
