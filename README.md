@@ -144,3 +144,5 @@ Petunjuk penggunaan kode adalah sebagai berikut:
 
 
 # Penutup
+
+Sekian dokumentasi dari Saya, Jika ada keluhan atau pertanyaan lebih lanjut silahkan hubungi saya
