@@ -134,3 +134,13 @@ Petunjuk penggunaan kode adalah sebagai berikut:
 3. Masuk ke `/whatsapp/login/`
 4. Scan menggunakan WhatsApp Kamu
 5. Selesai
+
+
+
+
+
+
+
+
+
+# Penutup
