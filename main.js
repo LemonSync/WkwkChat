@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 require("dotenv").config();
 const cors = require("cors");
@@ -9,6 +10,8 @@ const { Server } = require("socket.io");
 const QRCode = require("qrcode");
 const admin = require("firebase-admin");
 const { db } = require("./firebase/firebase");
+const time = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full" });
+const timeClock = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", timeStyle: "medium" });
 
 const { createCaptcha } = require("./utils/createCaptcha");
 
@@ -38,6 +41,15 @@ const {
 
 const app = express();
 
+const captchaLimiter = rateLimit({
+  windowMs: 2 * 60 * 1000,
+  max: 30,
+  message: {
+      ok: false,
+      message: "Apakah Kamu Sedang Melakukan DoS ??"
+  }
+});
+
 // ===============================
 
 app.set("trust proxy", 1);
@@ -53,7 +65,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'lemon-cool',
+    secret: process.env.SESSION_SECRET || 'super-secret-key',
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 300000 }
@@ -75,7 +87,7 @@ io.use((socket, next) => {
   if (!token) return next(new Error("Unauthorized"));
 
   try {
-    socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key');
     next();
   } catch {
     next(new Error("Unauthorized"));
@@ -248,7 +260,7 @@ app.get("/health", (_, res) => {
 
 // Captcha ================================
 
-app.get("/api/captcha", async (req, res) => {
+app.get("/api/captcha", captchaLimiter, async (req, res) => {
   try {
     const imageBuffer = await createCaptcha(req);
     res.writeHead(200, {
@@ -286,7 +298,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 
-app.post("/api/register/otp/send", async (req, res) => {
+app.post("/api/register/otp/send", captchaLimiter, async (req, res) => {
   try {
     const { phone, captcha } = req.body;
     if (!phone) {
@@ -297,10 +309,10 @@ app.post("/api/register/otp/send", async (req, res) => {
     delete req.session.captchaCode;
 
     if (!storedCaptcha) {
-      throw new Error("Captcha kedaluwarsa. Silakan klik gambar untuk kode baru.");
+      throw new Error(`Captcha kedaluwarsa. Silakan klik gambar untuk kode baru.\n${time}:${timeClock}\n`);
     }
     if (!captcha || captcha.toUpperCase() !== storedCaptcha.toUpperCase()) {
-      throw new Error("Kode Captcha salah. Silakan coba lagi.");
+      throw new Error(`Kode Captcha salah. Silakan coba lagi.\n${time}:${timeClock}\n`);
     }
 
     const whatsappStatus = getWhatsAppStatus();
@@ -379,11 +391,21 @@ app.post("/api/reset", async (req, res) => {
 });
 
 
-app.post("/api/reset/otp/send", async (req, res) => {
+app.post("/api/reset/otp/send", captchaLimiter, async (req, res) => {
   
   try {
-    const { phone } = req.body;
+    const { phone, captcha } = req.body;
     if (!phone) throw new Error("Phone required");
+      
+    const storedCaptcha = req.session.captchaCode;
+    delete req.session.captchaCode;
+
+    if (!storedCaptcha) {
+      throw new Error(`Captcha kedaluwarsa. Silakan klik gambar untuk kode baru.\n${time}:${timeClock}\n`);
+    }
+    if (!captcha || captcha.toUpperCase() !== storedCaptcha.toUpperCase()) {
+      throw new Error(`Kode Captcha salah. Silakan coba lagi.\n${time}:${timeClock}\n`);
+    }
     
     const whatsappStatus = getWhatsAppStatus();
     if (!whatsappStatus.ready) {
@@ -490,8 +512,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server berjalan di port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`WhatsApp QR: http://localhost:${PORT}/whatsapp/login`);
-  console.log(`WhatsApp status: http://localhost:${PORT}/whatsapp/status`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  console.log(`📱 WhatsApp QR: http://localhost:${PORT}/whatsapp/login`);
+  console.log(`🔧 WhatsApp status: http://localhost:${PORT}/whatsapp/status`);
 });

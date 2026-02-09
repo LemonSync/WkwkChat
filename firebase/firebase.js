@@ -3,7 +3,7 @@ const path = require("path");
 
 const serviceAccount = require(path.join(
   __dirname,
-  "../json/serviceAccountKey.json" // GANTI PAKE ENV LU, MALAS GW NGUBAHNYA
+  "../json/serviceAccountKey.json"
 ));
 
 admin.initializeApp({
