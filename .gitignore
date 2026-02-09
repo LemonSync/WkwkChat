@@ -1,7 +1,0 @@
-auth_info_baileys
-node_modules/
-.env.example
-.wwebjs_cache/
-package-lock.json
-public/
-sesi_wa/
