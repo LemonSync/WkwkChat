@@ -1,4 +1,4 @@
-<h3 align="center">WKWKCHAT</h3>
+<h3 align="center">WkwkAuth</h3>
 
 ### DAFTAR ISI
 * [PENGENALAN](#pengenalan)
@@ -10,14 +10,14 @@
 
 # Pengenalan
 
-###### Apa itu `WkwkChat` ?
-Jadi, Singkatnya `WkwkChat` adalah sebuah website yang dimana dapat mengirimkan pesan secara **<ins>Real Time</ins>**. Mengapa bisa begitu ? Ya Karena `WkwkChat` menggunakan teknologi socket dan database yang mendukung perubahan field secara real time juga. Dilengkapi dengan sistem daftar, login, dan reset password yang bagus. Website ini juga dilengkapi dengan auth yang mantap juga.
+###### Apa itu `WkwkAuth` ?
+Jadi, Singkatnya `WkwkAuth` adalah sebuah website untuk <ins>login, daftar, registrasi ulang</ins> yang dilengkapi dengan fitur auth yang sempurna. Website ini menggunakan sistem login 1 pintu.
 
 ###### Emang Aman ?
 Ya, tentu saja. Karena website ini dilengkapi dengan *antispam* otp menggunakan logika **captcha**. Dan peminimalisiran kebocoran data atau DDOS.
 
 ###### Emang, Teknologi apa aja yang dipakai ?
-Teknologi yang dipakai dalam website `WkwkChat` ini adalah teknologi sederhana, dan mungkin semua orang pernah menggunakannya.
+Teknologi yang dipakai dalam website `WkwkAuth` ini adalah teknologi sederhana, dan mungkin semua orang pernah menggunakannya.
 Didasari oleh **NodeJS** website ini menggunakan:
 
 Frontend
@@ -40,7 +40,7 @@ Database
 * Firebase Firestore
 
 ###### Kemana OTP akan dikirim saat verifikasi ?
-Nah, Kerena untuk daftar memerlukan verifikasi, Website `WkwkChat` menggunakan Baileys Whatsapp untuk mengirim verifikasi.
+Nah, Kerena untuk daftar memerlukan verifikasi, Website `WkwkAuth` menggunakan Baileys Whatsapp untuk mengirim verifikasi.
 
 ###### Maksud dari menggunakan Baileys ?
 Baileys adalah WhatsApp Web API, jadi secara langsung itu seperti menautkan akun whatsapp(yang digunakan untuk mengirim otp) ke sistemnya. jadi ibaratkan saat kita ingin memasang whatsapp kita ke komputer atau situs desktop lainnya. Contohnya **[Web WhatsApp](https://web.whatsapp.com)**.
@@ -60,21 +60,15 @@ Ya, tentu saja! Asalkan menaruh `Kredit/WM` saja hehe.
 
 # Fitur
 
-Fitur yang terdapat di website `WkwkChat` ini adalah:
+Fitur yang terdapat di website `WkwkAuth` ini adalah:
 
-Auth
+Auth:
 * Login
 * Daftar
 * Lupa Password
 * Captcha
 * Kirim OTP
 * Route (alihkan jika belum masuk)
-
-Chat
-* Join Room (user, creator)
-* Send Message (user, creator)
-* Logout (user, creator)
-* Create Room (creator)
 
 ----------------
 
@@ -86,7 +80,7 @@ Petunjuk penggunaan kode adalah sebagai berikut:
 
 1. serviceAccountKey.json
    
-   Pastikan kamu mengambil key firebase kamu dan menaruhnya di path [./json/](https://github.com/LemonSync/WkwkChat/tree/main/json)
+   Pastikan kamu mengambil key firebase kamu dan menaruhnya di path [./json/](https://github.com/LemonSync/WkwkAuth/tree/main/json)
    **Note**: Jangan sekali-kali menyebarkan serviceAccountKey kamu ke public
 
 2. ENV
